@@ -2,25 +2,24 @@
 import { readFileSync } from 'fs';
 import { marked } from 'marked';
 import { sanitizeHtml } from './sanitizer';
-import { ParsedRequest } from './types';
+
 const twemoji = require('twemoji');
 const twOptions = { folder: 'svg', ext: '.svg' };
 const emojify = (text: string) => twemoji.parse(text, twOptions);
 
 const rglr = readFileSync(`${__dirname}/../_fonts/Inter-Regular.woff2`).toString('base64');
 const bold = readFileSync(`${__dirname}/../_fonts/Inter-Bold.woff2`).toString('base64');
-const mono = readFileSync(`${__dirname}/../_fonts/Vera-Mono.woff2`).toString('base64');
+const futura = readFileSync(`${__dirname}/../_fonts/FuturaPT-Bold.woff2`).toString('base64');
 
-function getCss(theme: string, fontSize: string) {
-    let background = 'white';
-    let foreground = 'black';
-    let radial = 'lightgray';
+function getCss(theme: string, fontSize: string, backgroundImage: string) {
+
+    let foreground = '#e2e4e9';
+    let baseFontSize = sanitizeHtml(fontSize);
 
     if (theme === 'dark') {
-        background = 'black';
         foreground = 'white';
-        radial = 'dimgray';
     }
+
     return `
     @font-face {
         font-family: 'Inter';
@@ -37,21 +36,22 @@ function getCss(theme: string, fontSize: string) {
     }
 
     @font-face {
-        font-family: 'Vera';
-        font-style: normal;
-        font-weight: normal;
-        src: url(data:font/woff2;charset=utf-8;base64,${mono})  format("woff2");
-      }
+        font-family: 'Futura';
+        font-style:  normal;
+        font-weight: bold;
+        src: url(data:font/woff2;charset=utf-8;base64,${futura}) format('woff2')
+    }
 
     body {
-        background: ${background};
-        background-image: radial-gradient(circle at 25px 25px, ${radial} 2%, transparent 0%), radial-gradient(circle at 75px 75px, ${radial} 2%, transparent 0%);
-        background-size: 100px 100px;
+        background-image: url('${backgroundImage}');
+        background-size: cover;
         height: 100vh;
         display: flex;
         text-align: center;
         align-items: center;
         justify-content: center;
+        font-family: 'Futura', sans-serif;
+        font-size: ${baseFontSize};
     }
 
     code {
@@ -67,6 +67,7 @@ function getCss(theme: string, fontSize: string) {
 
     .logo-wrapper {
         display: flex;
+        display: none;
         align-items: center;
         align-content: center;
         justify-content: center;
@@ -95,29 +96,28 @@ function getCss(theme: string, fontSize: string) {
     }
     
     .heading {
-        font-family: 'Inter', sans-serif;
-        font-size: ${sanitizeHtml(fontSize)};
+        font-size: 170px;
         font-style: normal;
         color: ${foreground};
         line-height: 1.8;
     }`;
 }
 
-export function getHtml(parsedReq: ParsedRequest) {
-    const { text, theme, md, fontSize, images, widths, heights } = parsedReq;
+export function getHtml(parsedReq: any) {
+    const { text, theme, md, fontSize, images, widths, heights, backgroundImage } = parsedReq;
     return `<!DOCTYPE html>
 <html>
     <meta charset="utf-8">
     <title>Generated Image</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        ${getCss(theme, fontSize)}
+        ${getCss(theme, fontSize, backgroundImage)}
     </style>
     <body>
         <div>
             <div class="spacer">
             <div class="logo-wrapper">
-                ${images.map((img, i) =>
+                ${images.map((img: string, i: number) =>
                     getPlusSign(i) + getImage(img, widths[i], heights[i])
                 ).join('')}
             </div>

@@ -1,4 +1,4 @@
-import { ParsedRequest, Theme, FileType } from '../api/_lib/types';
+import { Theme, FileType } from '../api/_lib/types';
 const { H, R, copee } = (window as any);
 let timeout = -1;
 
@@ -157,21 +157,8 @@ const imageDarkOptions: DropdownOption[] = [
     { text: 'Hyper', value: 'https://assets.vercel.com/image/upload/front/assets/design/hyper-bw-logo.svg' },
 ];
 
-
-interface AppState extends ParsedRequest {
-    loading: boolean;
-    showToast: boolean;
-    messageToast: string;
-    selectedImageIndex: number;
-    widths: string[];
-    heights: string[];
-    overrideUrl: URL | null;
-}
-
-type SetState = (state: Partial<AppState>) => void;
-
-const App = (_: any, state: AppState, setState: SetState) => {
-    const setLoadingState = (newState: Partial<AppState>) => {
+const App = (_: any, state: any, setState: any) => {
+    const setLoadingState = (newState: Partial<any>) => {
         window.clearTimeout(timeout);
         if (state.overrideUrl && state.overrideUrl !== newState.overrideUrl) {
             newState.overrideUrl = state.overrideUrl;
@@ -307,7 +294,7 @@ const App = (_: any, state: AppState, setState: SetState) => {
                         )
                     ),
                 }),
-                ...images.slice(1).map((image, i) => H(Field, {
+                ...images.slice(1).map((image: string, i: number) => H(Field, {
                     label: `Image ${i + 2}`,
                     input: H('div',
                         H(TextInput, {
