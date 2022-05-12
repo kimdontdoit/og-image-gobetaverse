@@ -1,41 +1,42 @@
+/**
+ * NBA.png?
+ * titles=Team 1
+ * titles=Team 2
+ *
+ * images=https%3A%2F%2Fgobetaverse.com%2Fwp-content%2Fuploads%2F2022%2F04%2Fnba-logo-transparent-e1648847428957.png
+ * backgroundImage=https%3A%2F%2Fgobetaverse.com%2Fwp-content%2Fuploads%2F2022%2F04%2Fog_image.png
+ * logo=https%3A%2F%2Fgobetaverse.com%2Fwp-content%2Fuploads%2F2022%2F04%2Fgobetaverse_logo.png
+ */
+
 import { readFileSync } from "fs";
-import { marked } from "marked";
 import { sanitizeHtml } from "./sanitizer";
 
 const twemoji = require("twemoji");
 const twOptions = { folder: "svg", ext: ".svg" };
 const emojify = (text: string) => twemoji.parse(text, twOptions);
 
-
-const fontMed= readFileSync(
+const futuraMedium = readFileSync(
   `${__dirname}/../_fonts/FuturaPT-Medium.woff2`
 ).toString("base64");
 
-const fontBold = readFileSync(
+const futuraHeavy = readFileSync(
   `${__dirname}/../_fonts/FuturaPT-Heavy.woff2`
 ).toString("base64");
 
-function getCss(theme: string, fontSize: string, backgroundImage: string) {
-  let foreground = "#e2e4e9";
-  let baseFontSize = sanitizeHtml(fontSize);
-
-  if (theme === "dark") {
-    foreground = "#e2e4e9";
-  }
-
+function getCss(backgroundImage: string) {
   return `
    @font-face {
       font-family: 'Futura';
       font-style:  normal;
       font-weight: 500;
-      src: url(data:font/woff2;charset=utf-8;base64,${fontMed}) format('woff2')
+      src: url(data:font/woff2;charset=utf-8;base64,${futuraMedium}) format('woff2')
     }
 
     @font-face {
         font-family: 'Futura';
         font-style:  normal;
         font-weight: 700;
-        src: url(data:font/woff2;charset=utf-8;base64,${fontBold}) format('woff2')
+        src: url(data:font/woff2;charset=utf-8;base64,${futuraHeavy}) format('woff2')
     }
 
     body {
@@ -44,7 +45,7 @@ function getCss(theme: string, fontSize: string, backgroundImage: string) {
       background-image: url('${backgroundImage}');
       background-size: cover;
       font-family: 'Futura', sans-serif;
-      font-size: ${baseFontSize};
+      font-size: '18px';
     }
     
     .wrapper {
@@ -56,11 +57,13 @@ function getCss(theme: string, fontSize: string, backgroundImage: string) {
       align-items: center;
     }
 
-    .league-logo {
+    .images {
+      display: flex;
+      flex-direction: row;
       margin-bottom: 48px;
     }
 
-    .league-logo span {
+    .images .imageWrapper {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -68,16 +71,24 @@ function getCss(theme: string, fontSize: string, backgroundImage: string) {
         height: 192px;
     }
 
-    .league-logo img {
+    .images img {
         max-height: 100%;
         max-width: 100%;
+        min-width: 100px;
         object-fit: contain;
     }
 
-    .plus {
-        color: #BBB;
-        font-family: Times New Roman, Verdana;
-        font-size: 100px;
+    .images.multiple-images {
+      margin-bottom: 64px;
+    }
+    .multiple-images .imageWrapper {
+      margin-right: 32px;
+    }
+
+    .separator {
+        font-size: 60px;
+        color: #999ca3;
+        font-weight: 700;
     }
 
     .emoji {
@@ -97,9 +108,14 @@ function getCss(theme: string, fontSize: string, backgroundImage: string) {
     .heading {
         font-size: 150px;
         font-style: normal;
-        color: ${foreground};
+        color: #e2e4e9;
         font-weight: 700;
         margin-bottom: 48px;
+    }
+
+    .heading.titles {
+      text-align: center;
+      font-size: 100px;
     }
     
     .button {
@@ -124,64 +140,55 @@ function getCss(theme: string, fontSize: string, backgroundImage: string) {
 }
 
 export function getHtml(parsedReq: any) {
-  const {
-    text,
-    theme,
-    md,
-    fontSize,
-    images,
-    widths,
-    heights,
-    backgroundImage,
-    logo
-  } = parsedReq;
+  const { text, images, separator, backgroundImage, logo, titles } = parsedReq;
+
   return `<!DOCTYPE html>
-<html>
-    <meta charset="utf-8">
-    <title>Generated Image</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        ${getCss(theme, fontSize, backgroundImage)}
-    </style>
-    <body>
+    <html>
+      <meta charset="utf-8">
+      <title>Generated Image</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <style>
+          ${getCss(backgroundImage)}
+      </style>
+      <body>
 
-      <div class="logo">
-          <img
-            alt="Generated Image"
-            src="${sanitizeHtml(logo)}"
-          />
-      </div>
+        <div class="logo">
+            <img
+              src="${sanitizeHtml(logo)}"
+            />
+        </div>
 
-      ${images && `<div class="wrapper">
-          <div class="league-logo">
-              <span>
-                  ${images
-                    .map(
-                      (img: string, i: number) =>
-                        getPlusSign(i) + getImage(img, widths[i], heights[i])
-                    )
-                    .join("")}
-              </span>
-          </div>`}
+        ${
+          images &&
+          `<div class="wrapper">
+            <div class="images ${
+              images.length > 1 ? "multiple-images" : "single-image"
+            }">
+              ${images.map((img: string) => getImage(img)).join("")}
+            </div>`
+        }
 
-          ${text && `<div class="heading">${emojify(
-            md ? marked(text) : sanitizeHtml(text)
-          )}
-          </div>`}
-      </div>
-    </body>
-</html>`;
+            ${
+              titles
+                ? `<div class="heading titles">${
+                    titles[0] +
+                    getSeparator(separator ? separator : "") +
+                    titles[1]
+                  }</div>`
+                : text &&
+                  `<div class="heading">${emojify(sanitizeHtml(text))}</div>`
+            }
+        </div>
+      </body>
+    </html>`;
 }
 
-function getImage(src: string, width = "auto", height = "225") {
-  return `<img
-        alt="Generated Image"
+function getImage(src: string) {
+  return `<span class="imageWrapper"><img
         src="${sanitizeHtml(src)}"
-        width="${sanitizeHtml(width)}"
-        height="${sanitizeHtml(height)}"
-    />`;
+    /></span>`;
 }
 
-function getPlusSign(i: number) {
-  return i === 0 ? "" : '<div class="plus">+</div>';
+function getSeparator(sep: string) {
+  return '<div class="separator">' + sep + "</div>";
 }
