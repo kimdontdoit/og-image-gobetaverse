@@ -139,8 +139,22 @@ function getCss(backgroundImage: string) {
     `;
 }
 
+const getTitle = ({ titles, separator, text }: any) => {
+  if (titles && titles.length > 1) {
+    return `<div class="heading titles">${
+      titles[0] + getSeparator(separator ? separator : "") + titles[1]
+    }</div>`;
+  } else if (titles) {
+    return `<div class="heading titles">${titles[0]}</div>`;
+  }
+
+  return `<div class="heading">${emojify(sanitizeHtml(text))}</div>`;
+};
+
 export function getHtml(parsedReq: any) {
   const { text, images, separator, backgroundImage, logo, titles } = parsedReq;
+
+  const og_image_title = getTitle({ titles, separator, text });
 
   return `<!DOCTYPE html>
     <html>
@@ -168,16 +182,7 @@ export function getHtml(parsedReq: any) {
             </div>`
         }
 
-            ${
-              titles
-                ? `<div class="heading titles">${
-                    titles[0] +
-                    getSeparator(separator ? separator : "") +
-                    titles[1]
-                  }</div>`
-                : text &&
-                  `<div class="heading">${emojify(sanitizeHtml(text))}</div>`
-            }
+        ${og_image_title}
         </div>
       </body>
     </html>`;
